@@ -84,8 +84,6 @@ def generate_partitioned_queries(
     partition_breakpoints: List[Union[int, float, str]] = None,
     far_left_bucket: str='exclusive', #Valid values are exclusive or inclusive, or None
     far_right_bucket: str='inclusive', #Valid values are exclusive or inclusive, or None
-    # far_left_boundary: str = "open", #Valid values are open, closed_inclusive, or closed_exclusive
-    # far_right_boundary: str = "open", #Valid values are open, closed_inclusive, or closed_exclusive
     range_inclusive_boundary: str = "left" #Valid values are left or right
 ):
     partition_queries = []
@@ -123,9 +121,9 @@ def generate_partitioned_queries(
                     raise ValueError(f"Invalid ISO 8601 date format in partition_break_points: '{bp}'. Expected format is YYYY-MM-DD.")
 
     # If specified, check that the far boundary types are valid
-    if far_left_bucket not in ['inclusive', 'exclusive']:
+    if far_left_bucket is not None and far_left_bucket not in ['inclusive', 'exclusive']:
         raise ValueError("far_left_bucket must be 'inclusive' or 'exclusive'")
-    if far_right_bucket not in ['inclusive', 'exclusive']:
+    if far_right_bucket is not None and far_right_bucket not in ['inclusive', 'exclusive']:
         raise ValueError("far_right_bucket must be 'inclusive' or 'exclusive'")
 
     # Generate Base SQL Extraction Query
@@ -150,7 +148,7 @@ def generate_partitioned_queries(
             partition_queries.append(partition_query.sql())
         if add_partition_for_other_values:
             parsed_clauses = [sqlglot.parse_one(clause) for clause in partition_clauses]
-            negated_clauses = [sqlglot.exp.Not(this=clause) for clause in parsed_clauses]
+            negated_clauses = [sqlglot.exp.Paren(this=sqlglot.exp.Not(this=clause)) for clause in parsed_clauses]
             combined_negated_clauses = negated_clauses[0]
             for clause_expr in negated_clauses[1:]:
                 combined_negated_clauses = sqlglot.exp.And(this=combined_negated_clauses, expression=clause_expr)
@@ -165,15 +163,15 @@ def generate_partitioned_queries(
                 condition = sqlglot.exp.In(this=partition_column_exp, expressions=value_expressions)
             else:
                 value_expression = sqlglot.exp.Literal.string(value) if isinstance(value,str) else sqlglot.exp.Literal.number(value)
-                condition = sqlglot.exp.EQ(this=partition_column_exp, expressions=value_expression)
+                condition = sqlglot.exp.EQ(this=partition_column_exp, expression=value_expression)
             partition_query = base_query.where(condition)
-            partition_queries.append(partition_query)
-        if other_values_partition_query:
+            partition_queries.append(partition_query.sql())
+        if add_partition_for_other_values:
             flattened_values = list(chain.from_iterable(v if isinstance(v, list) else [v] for v in partition_values))
             value_expressions = [sqlglot.exp.Literal.string(v) if isinstance(v, str) else sqlglot.exp.Literal.number(v) for v in flattened_values]
-            condition = sqlglot.exp.Not(sqlglot.exp.In(this=partition_column_exp, expressions=value_expressions))
+            condition = sqlglot.exp.Not(this=sqlglot.exp.In(this=partition_column_exp, expressions=value_expressions))
             other_values_partition_query = base_query.where(condition)
-            partition_queries.append(other_values_partition_query)
+            partition_queries.append(other_values_partition_query.sql())
     # 3. By a List of Breakpoints
     elif partition_breakpoints:
         partition_column_exp = sqlglot.exp.Column(this=partition_column)
@@ -232,7 +230,10 @@ def generate_partitioned_queries(
 
                 # Interval Range Partitions           
                 if range_inclusive_boundary=='left':
-                    lower_condition = sqlglot.exp.GTE(this=partition_column_exp, expression=lower_exp)
+                    if i==0 and far_left_bucket=='inclusive':
+                        lower_condition = sqlglot.exp.GT(this=partition_column_exp, expression=lower_exp)
+                    else:
+                        lower_condition = sqlglot.exp.GTE(this=partition_column_exp, expression=lower_exp)
                     if i==(len(partition_breakpoints) - 2) and far_right_bucket=='exclusive':
                         upper_condition = sqlglot.exp.LTE(this=partition_column_exp, expression=upper_exp)
                     else:
@@ -242,8 +243,11 @@ def generate_partitioned_queries(
                         lower_condition = sqlglot.exp.GTE(this=partition_column_exp, expression=lower_exp)
                     else:
                         lower_condition = sqlglot.exp.GT(this=partition_column_exp, expression=lower_exp)
-                    upper_condition = sqlglot.exp.LTE(this=partition_column_exp, expression=upper_exp)
-                condition = sqlglot.exp.And(lower_condition, upper_condition)
+                    if i==(len(partition_breakpoints) - 2) and far_right_bucket=='inclusive':
+                        upper_condition = sqlglot.exp.LT(this=partition_column_exp, expression=upper_exp)
+                    else:
+                        upper_condition = sqlglot.exp.LTE(this=partition_column_exp, expression=upper_exp)
+                condition = sqlglot.exp.And(this=lower_condition, expression=upper_condition)
                 partition_query = base_query.where(condition)
                 partition_queries.append(partition_query.sql())
 
