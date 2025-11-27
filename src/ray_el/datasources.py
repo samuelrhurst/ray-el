@@ -7,7 +7,7 @@ from ray.data.block import Block, BlockMetadata
 from ray.util import ActorPool
 
 
-class DBAPIBasedDataSource(Datasource):
+class DBAPIBasedDatasource(Datasource):
     """A Ray data source that reads from a DBAPI connection using SQL queries."""
 
     def __init__(
@@ -16,7 +16,7 @@ class DBAPIBasedDataSource(Datasource):
         DBAPIActorPool: ActorPool,
         chunk_size: int = 100000,
     ) -> None:
-        """Initialize the DBAPIBasedDataSource.
+        """Initialize the DBAPIBasedDatasource.
 
         Args:
             sql: A SQL string or list of SQL strings representing SQL statements.
@@ -46,9 +46,11 @@ class DBAPIBasedDataSource(Datasource):
             A list of ReadTask objects that execute the SQL queries.
         """
         def read_fn(sql_statement: str) -> Iterator[Block]:
-            """Execute a SQL statement and stream blocks as chunks arrive."""
-            import pyarrow as pa
+            """Execute a SQL statement and stream blocks as chunks arrive.
             
+            Args:
+                sql_statement: The SQL query to execute.
+            """
             # Get an idle actor from the pool  
             if self.actor_pool.has_free():
                 actor_handle = self.actor_pool.pop_idle()
@@ -59,19 +61,14 @@ class DBAPIBasedDataSource(Datasource):
             cursor_id = None
             while True:
                 # Call the actor method with .remote() and wait for result
-                rows, cursor_id, is_complete = ray.get(
+                # Actor returns PyArrow table directly
+                table, cursor_id, is_complete = ray.get(
                     actor_handle.get_next_chunk.remote(sql_statement, self.chunk_size, cursor_id)
                 )
-                if is_complete or not rows:
+                if is_complete or table is None:
                     break
                 
-                if rows:
-                    # Create Arrow table from rows (Arrow-based block as required)
-                    # Convert rows to dictionaries with string column names
-                    table = pa.Table.from_pylist(
-                        [{f"col_{i}": val for i, val in enumerate(row)} for row in rows]
-                    )
-                    yield table
+                yield table
             
             # Return the actor to the pool
             self.actor_pool.push(actor_handle)

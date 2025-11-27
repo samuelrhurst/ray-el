@@ -1,6 +1,6 @@
 """Ray actors for DBAPI-based data extraction."""
 
-from typing import Callable, Any, Tuple
+from typing import Callable, Any, Tuple, Optional
 import ray
 from ray.util import ActorPool
 
@@ -19,8 +19,8 @@ class dbapi_actor:
 
     def get_next_chunk(
         self, sql: str, chunk_size: int = 100000, cursor_id: str = None
-    ) -> Tuple[list[tuple], str, bool]:
-        """Get the next chunk of data from a SQL query.
+    ) -> Tuple[Optional[Any], str, bool]:
+        """Get the next chunk of data from a SQL query as a PyArrow table.
 
         Args:
             sql: SQL statement to execute.
@@ -28,11 +28,13 @@ class dbapi_actor:
             cursor_id: Identifier for an existing cursor, or None to create new one.
 
         Returns:
-            A tuple of (rows, cursor_id, is_complete) where:
-            - rows: List of row tuples fetched from the query
+            A tuple of (table, cursor_id, is_complete) where:
+            - table: PyArrow Table containing the fetched rows, or None if complete
             - cursor_id: Identifier for the cursor (for subsequent calls)
             - is_complete: True if no more data available, False otherwise
         """
+        import pyarrow as pa
+        
         # Create or retrieve cursor
         if cursor_id is None:
             cursor = self.conn.cursor()
@@ -44,7 +46,7 @@ class dbapi_actor:
         else:
             cursor = self._cursors.get(cursor_id)
             if cursor is None:
-                return [], cursor_id, True
+                return None, cursor_id, True
         
         # Fetch next chunk
         rows = cursor.fetchmany(chunk_size)
@@ -57,8 +59,14 @@ class dbapi_actor:
             cursor.close()
             if hasattr(self, '_cursors') and cursor_id in self._cursors:
                 del self._cursors[cursor_id]
+            return None, cursor_id, True
         
-        return rows, cursor_id, is_complete
+        # Convert rows to Arrow table
+        table = pa.Table.from_pylist(
+            [{f"col_{i}": val for i, val in enumerate(row)} for row in rows]
+        )
+        
+        return table, cursor_id, is_complete
 
 
 def create_dbapi_actor_pool(
