@@ -1,6 +1,6 @@
 # ray-el
 
-A data extract-load (EL) tool on top of the Ray distributed framework.
+A data extract-load (EL) tool built on top of the Ray distributed framework.
 
 ## Installation
 
