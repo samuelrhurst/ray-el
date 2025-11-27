@@ -1,0 +1,16 @@
+site_name: ray-el
+
+nav:
+  - Home: index.md
+
+theme:
+  name: "material"
+
+plugins:
+  - mkdocstrings:
+      handlers:
+        python:
+          paths:
+            - src
+  - mkdocs-autoapi:
+      autoapi_dir: src/ray_el

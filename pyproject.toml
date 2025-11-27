@@ -1,10 +1,20 @@
 [project]
 name = "ray-el"
 version = "0.1.0"
-description = "Add your description here"
+description = "A data extract-load tool built on top of the Ray distributed framework"
 readme = "README.md"
-requires-python = ">=3.12"
-dependencies = [
-    "ipykernel>=7.1.0",
-    "sqlglot>=27.29.0",
+authors = [
+    { name = "Sam Hurst", email = "20537436+samuelrhurst@users.noreply.github.com" }
 ]
+requires-python = ">=3.13"
+dependencies = [
+    "ray[data,default]>=2.52.0",
+    "sqlglot>=28.0.0",
+]
+
+[project.scripts]
+ray-el = "ray_el:main"
+
+[build-system]
+requires = ["uv_build>=0.9.10,<0.10.0"]
+build-backend = "uv_build"
