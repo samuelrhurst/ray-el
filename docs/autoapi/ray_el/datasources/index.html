@@ -400,6 +400,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#ray_el.datasources.DBAPIBasedDataSource.estimate_inmemory_data_size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        estimate_inmemory_data_size
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ray_el.datasources.DBAPIBasedDataSource.get_read_tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_read_tasks
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -543,6 +565,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#ray_el.datasources.DBAPIBasedDataSource.estimate_inmemory_data_size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        estimate_inmemory_data_size
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ray_el.datasources.DBAPIBasedDataSource.get_read_tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_read_tasks
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -669,53 +713,131 @@
 <span class="normal">53</span>
 <span class="normal">54</span>
 <span class="normal">55</span>
-<span class="normal">56</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">DBAPIBasedDataSource</span><span class="p">(</span><span class="n">Datasource</span><span class="p">):</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span>
+<span class="normal">94</span>
+<span class="normal">95</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">DBAPIBasedDataSource</span><span class="p">(</span><span class="n">Datasource</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A Ray data source that reads from a DBAPI connection using SQL queries.&quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">sql</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
         <span class="n">DBAPIActorPool</span><span class="p">:</span> <span class="n">ActorPool</span><span class="p">,</span>
+        <span class="n">chunk_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100000</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the DBAPIBasedDataSource.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            sql: A SQL string or list of SQL strings representing SQL statements.</span>
 <span class="sd">            DBAPIActorPool: A Ray ActorPool containing dbapi_actor instances.</span>
+<span class="sd">            chunk_size: Number of rows to fetch per chunk. Defaults to 100000.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sql</span> <span class="o">=</span> <span class="n">sql</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">sql</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">actor_pool</span> <span class="o">=</span> <span class="n">DBAPIActorPool</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chunk_size</span> <span class="o">=</span> <span class="n">chunk_size</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_read_stream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Block</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read data from the DBAPI actors as blocks.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">estimate_inmemory_data_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Estimate the in-memory data size.</span>
 
-<span class="sd">        Submits each SQL statement to the actor pool and yields blocks as they</span>
-<span class="sd">        are produced, converting chunks to blocks using DelegatingBlockBuilder.</span>
-
-<span class="sd">        Yields:</span>
-<span class="sd">            Ray blocks constructed from the streamed data chunks.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            None since we don&#39;t know the size in advance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Submit all SQL statements to the actor pool</span>
-        <span class="n">futures</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_read_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parallelism</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">per_task_row_limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ReadTask</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get read tasks for the datasource.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            parallelism: The number of parallel read tasks.</span>
+<span class="sd">            per_task_row_limit: Optional limit on rows per task.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A list of ReadTask objects that execute the SQL queries.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">read_fn</span><span class="p">(</span><span class="n">sql_statement</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Block</span><span class="p">]:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Execute a SQL statement and stream blocks as chunks arrive.&quot;&quot;&quot;</span>
+            <span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pa</span>
+
+            <span class="c1"># Get an idle actor from the pool  </span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor_pool</span><span class="o">.</span><span class="n">has_free</span><span class="p">():</span>
+                <span class="n">actor_handle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor_pool</span><span class="o">.</span><span class="n">pop_idle</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># If no actors are free, just get the first one</span>
+                <span class="n">actor_handle</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">actor_pool</span><span class="o">.</span><span class="n">_idle_actors</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor_pool</span><span class="o">.</span><span class="n">_busy_actors</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">cursor_id</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="c1"># Call the actor method with .remote() and wait for result</span>
+                <span class="n">rows</span><span class="p">,</span> <span class="n">cursor_id</span><span class="p">,</span> <span class="n">is_complete</span> <span class="o">=</span> <span class="n">ray</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                    <span class="n">actor_handle</span><span class="o">.</span><span class="n">get_next_chunk</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span><span class="n">sql_statement</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunk_size</span><span class="p">,</span> <span class="n">cursor_id</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">is_complete</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">rows</span><span class="p">:</span>
+                    <span class="k">break</span>
+
+                <span class="k">if</span> <span class="n">rows</span><span class="p">:</span>
+                    <span class="c1"># Create Arrow table from rows (Arrow-based block as required)</span>
+                    <span class="c1"># Convert rows to dictionaries with string column names</span>
+                    <span class="n">table</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="o">.</span><span class="n">from_pylist</span><span class="p">(</span>
+                        <span class="p">[{</span><span class="sa">f</span><span class="s2">&quot;col_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">row</span><span class="p">)}</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">]</span>
+                    <span class="p">)</span>
+                    <span class="k">yield</span> <span class="n">table</span>
+
+            <span class="c1"># Return the actor to the pool</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">actor_pool</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">actor_handle</span><span class="p">)</span>
+
+        <span class="c1"># Create a read task for each SQL statement</span>
+        <span class="n">read_tasks</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">sql_statement</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sql</span><span class="p">:</span>
-            <span class="n">future</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor_pool</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span>
-                <span class="k">lambda</span> <span class="n">actor</span><span class="p">,</span> <span class="n">sql</span><span class="p">:</span> <span class="n">actor</span><span class="o">.</span><span class="n">stream_chunks</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span><span class="n">sql</span><span class="p">),</span>
-                <span class="n">sql_statement</span><span class="p">,</span>
+            <span class="c1"># Create metadata with unknown size since we can&#39;t know in advance</span>
+            <span class="n">metadata</span> <span class="o">=</span> <span class="n">BlockMetadata</span><span class="p">(</span>
+                <span class="n">num_rows</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">size_bytes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">input_files</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">exec_stats</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="n">futures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">future</span><span class="p">)</span>
+            <span class="n">read_task</span> <span class="o">=</span> <span class="n">ReadTask</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">sql</span><span class="o">=</span><span class="n">sql_statement</span><span class="p">:</span> <span class="n">read_fn</span><span class="p">(</span><span class="n">sql</span><span class="p">),</span>
+                <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">read_tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">read_task</span><span class="p">)</span>
 
-        <span class="c1"># Process results as they arrive</span>
-        <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">futures</span><span class="p">:</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">ray</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">future</span><span class="p">)</span>
-
-            <span class="c1"># result is a remote generator, so we need to get the actual chunks</span>
-            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
-                <span class="n">builder</span> <span class="o">=</span> <span class="n">DelegatingBlockBuilder</span><span class="p">()</span>
-                <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
-                    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">chunk</span><span class="p">:</span>
-                        <span class="n">builder</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">builder</span><span class="o">.</span><span class="n">get_num_rows</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="k">yield</span> <span class="n">builder</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">read_tasks</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -736,7 +858,7 @@
 
 
 <h3 id="ray_el.datasources.DBAPIBasedDataSource.__init__" class="doc doc-heading">
-            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="n">DBAPIActorPool</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="n">DBAPIActorPool</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="mi">100000</span><span class="p">)</span></code>
 
 </h3>
 
@@ -789,6 +911,22 @@
                 <em>required</em>
             </td>
           </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>chunk_size</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of rows to fetch per chunk. Defaults to 100000.</p>
+              </div>
+            </td>
+            <td>
+                  <code>100000</code>
+            </td>
+          </tr>
       </tbody>
     </table>
 
@@ -807,19 +945,290 @@
 <span class="normal">22</span>
 <span class="normal">23</span>
 <span class="normal">24</span>
-<span class="normal">25</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">sql</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
     <span class="n">DBAPIActorPool</span><span class="p">:</span> <span class="n">ActorPool</span><span class="p">,</span>
+    <span class="n">chunk_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100000</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize the DBAPIBasedDataSource.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        sql: A SQL string or list of SQL strings representing SQL statements.</span>
 <span class="sd">        DBAPIActorPool: A Ray ActorPool containing dbapi_actor instances.</span>
+<span class="sd">        chunk_size: Number of rows to fetch per chunk. Defaults to 100000.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">sql</span> <span class="o">=</span> <span class="n">sql</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">sql</span><span class="p">]</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">actor_pool</span> <span class="o">=</span> <span class="n">DBAPIActorPool</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">chunk_size</span> <span class="o">=</span> <span class="n">chunk_size</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="ray_el.datasources.DBAPIBasedDataSource.estimate_inmemory_data_size" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">estimate_inmemory_data_size</span><span class="p">()</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Estimate the in-memory data size.</p>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="int">int</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>None since we don't know the size in advance.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/ray_el/datasources.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">estimate_inmemory_data_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Estimate the in-memory data size.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None since we don&#39;t know the size in advance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="kc">None</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="ray_el.datasources.DBAPIBasedDataSource.get_read_tasks" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_read_tasks</span><span class="p">(</span><span class="n">parallelism</span><span class="p">,</span> <span class="n">per_task_row_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Get read tasks for the datasource.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>parallelism</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The number of parallel read tasks.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>per_task_row_limit</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="int">int</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional limit on rows per task.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="typing.List">List</span>[<span title="ray.data.datasource.ReadTask">ReadTask</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A list of ReadTask objects that execute the SQL queries.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>src/ray_el/datasources.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span>
+<span class="normal">94</span>
+<span class="normal">95</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_read_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parallelism</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">per_task_row_limit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ReadTask</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get read tasks for the datasource.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        parallelism: The number of parallel read tasks.</span>
+<span class="sd">        per_task_row_limit: Optional limit on rows per task.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A list of ReadTask objects that execute the SQL queries.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">read_fn</span><span class="p">(</span><span class="n">sql_statement</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Block</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute a SQL statement and stream blocks as chunks arrive.&quot;&quot;&quot;</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pa</span>
+
+        <span class="c1"># Get an idle actor from the pool  </span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor_pool</span><span class="o">.</span><span class="n">has_free</span><span class="p">():</span>
+            <span class="n">actor_handle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor_pool</span><span class="o">.</span><span class="n">pop_idle</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If no actors are free, just get the first one</span>
+            <span class="n">actor_handle</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">actor_pool</span><span class="o">.</span><span class="n">_idle_actors</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">actor_pool</span><span class="o">.</span><span class="n">_busy_actors</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">cursor_id</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="c1"># Call the actor method with .remote() and wait for result</span>
+            <span class="n">rows</span><span class="p">,</span> <span class="n">cursor_id</span><span class="p">,</span> <span class="n">is_complete</span> <span class="o">=</span> <span class="n">ray</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="n">actor_handle</span><span class="o">.</span><span class="n">get_next_chunk</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span><span class="n">sql_statement</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunk_size</span><span class="p">,</span> <span class="n">cursor_id</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">is_complete</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">rows</span><span class="p">:</span>
+                <span class="k">break</span>
+
+            <span class="k">if</span> <span class="n">rows</span><span class="p">:</span>
+                <span class="c1"># Create Arrow table from rows (Arrow-based block as required)</span>
+                <span class="c1"># Convert rows to dictionaries with string column names</span>
+                <span class="n">table</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="o">.</span><span class="n">from_pylist</span><span class="p">(</span>
+                    <span class="p">[{</span><span class="sa">f</span><span class="s2">&quot;col_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">row</span><span class="p">)}</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="k">yield</span> <span class="n">table</span>
+
+        <span class="c1"># Return the actor to the pool</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">actor_pool</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">actor_handle</span><span class="p">)</span>
+
+    <span class="c1"># Create a read task for each SQL statement</span>
+    <span class="n">read_tasks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">sql_statement</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sql</span><span class="p">:</span>
+        <span class="c1"># Create metadata with unknown size since we can&#39;t know in advance</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="n">BlockMetadata</span><span class="p">(</span>
+            <span class="n">num_rows</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">size_bytes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">input_files</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">exec_stats</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">read_task</span> <span class="o">=</span> <span class="n">ReadTask</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">sql</span><span class="o">=</span><span class="n">sql_statement</span><span class="p">:</span> <span class="n">read_fn</span><span class="p">(</span><span class="n">sql</span><span class="p">),</span>
+            <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">read_tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">read_task</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">read_tasks</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>

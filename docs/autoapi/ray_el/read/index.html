@@ -566,7 +566,7 @@
 
 
 <h2 id="ray_el.read.read_sql" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">read_sql</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="n">DBAPIActorPool</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">read_sql</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="n">DBAPIActorPool</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="mi">100000</span><span class="p">)</span></code>
 
 </h2>
 
@@ -622,6 +622,22 @@ without waiting for all blocks to be produced.</p>
                 <em>required</em>
             </td>
           </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>chunk_size</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of rows to fetch per chunk. Defaults to 100000.</p>
+              </div>
+            </td>
+            <td>
+                  <code>100000</code>
+            </td>
+          </tr>
       </tbody>
     </table>
 
@@ -669,9 +685,12 @@ without waiting for all blocks to be produced.</p>
 <span class="normal">25</span>
 <span class="normal">26</span>
 <span class="normal">27</span>
-<span class="normal">28</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">read_sql</span><span class="p">(</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">read_sql</span><span class="p">(</span>
     <span class="n">sql</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
     <span class="n">DBAPIActorPool</span><span class="p">:</span> <span class="n">ActorPool</span><span class="p">,</span>
+    <span class="n">chunk_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100000</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dataset</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Read data from SQL queries into a Ray Dataset.</span>
 
@@ -682,11 +701,12 @@ without waiting for all blocks to be produced.</p>
 <span class="sd">    Args:</span>
 <span class="sd">        sql: A SQL string or list of SQL strings representing SQL statements.</span>
 <span class="sd">        DBAPIActorPool: A Ray ActorPool containing dbapi_actor instances.</span>
+<span class="sd">        chunk_size: Number of rows to fetch per chunk. Defaults to 100000.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        A Ray Dataset that streams blocks as they are produced.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">datasource</span> <span class="o">=</span> <span class="n">DBAPIBasedDataSource</span><span class="p">(</span><span class="n">sql</span><span class="o">=</span><span class="n">sql</span><span class="p">,</span> <span class="n">DBAPIActorPool</span><span class="o">=</span><span class="n">DBAPIActorPool</span><span class="p">)</span>
+    <span class="n">datasource</span> <span class="o">=</span> <span class="n">DBAPIBasedDataSource</span><span class="p">(</span><span class="n">sql</span><span class="o">=</span><span class="n">sql</span><span class="p">,</span> <span class="n">DBAPIActorPool</span><span class="o">=</span><span class="n">DBAPIActorPool</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">read_datasource</span><span class="p">(</span><span class="n">datasource</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
