@@ -1,5 +1,8 @@
 site_name: ray-el
 
+docs_dir: docs-src  # Source markdown files
+site_dir: docs      # Built output for GitHub Pages
+
 nav:
   - Home: index.md
 
