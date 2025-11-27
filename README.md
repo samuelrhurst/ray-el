@@ -35,4 +35,4 @@ for block in dataset.iter_blocks():
 
 ## Documentation
 
-For full documentation, visit [Zensical](https://zensical.org/docs/get-started/).
+For full documentation, visit https://samuelrhurst.github.io/ray-el/.
