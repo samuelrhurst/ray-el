@@ -10,6 +10,7 @@ from ray_el.datasources import DBAPIBasedDataSource
 def read_sql(
     sql: Union[str, List[str]],
     DBAPIActorPool: ActorPool,
+    chunk_size: int = 100000,
 ) -> Dataset:
     """Read data from SQL queries into a Ray Dataset.
 
@@ -20,9 +21,10 @@ def read_sql(
     Args:
         sql: A SQL string or list of SQL strings representing SQL statements.
         DBAPIActorPool: A Ray ActorPool containing dbapi_actor instances.
+        chunk_size: Number of rows to fetch per chunk. Defaults to 100000.
 
     Returns:
         A Ray Dataset that streams blocks as they are produced.
     """
-    datasource = DBAPIBasedDataSource(sql=sql, DBAPIActorPool=DBAPIActorPool)
+    datasource = DBAPIBasedDataSource(sql=sql, DBAPIActorPool=DBAPIActorPool, chunk_size=chunk_size)
     return read_datasource(datasource)

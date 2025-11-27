@@ -1,6 +1,6 @@
 """Ray actors for DBAPI-based data extraction."""
 
-from typing import Callable, Iterator, Any, Tuple
+from typing import Callable, Any, Tuple
 import ray
 from ray.util import ActorPool
 
@@ -17,25 +17,48 @@ class dbapi_actor:
         """
         self.conn = connection_factory()
 
-    def stream_chunks(
-        self, sql: str, chunk_size: int = 100000
-    ) -> Iterator[list[dict]]:
-        """Stream chunks of data from a SQL query.
+    def get_next_chunk(
+        self, sql: str, chunk_size: int = 100000, cursor_id: str = None
+    ) -> Tuple[list[tuple], str, bool]:
+        """Get the next chunk of data from a SQL query.
 
         Args:
             sql: SQL statement to execute.
             chunk_size: Number of rows to fetch per chunk. Defaults to 100000.
+            cursor_id: Identifier for an existing cursor, or None to create new one.
 
-        Yields:
-            Lists of rows (as dictionaries or tuples) fetched from the query.
+        Returns:
+            A tuple of (rows, cursor_id, is_complete) where:
+            - rows: List of row tuples fetched from the query
+            - cursor_id: Identifier for the cursor (for subsequent calls)
+            - is_complete: True if no more data available, False otherwise
         """
-        with self.conn.cursor() as cursor:
+        # Create or retrieve cursor
+        if cursor_id is None:
+            cursor = self.conn.cursor()
             cursor.execute(sql)
-            while True:
-                rows = cursor.fetchmany(chunk_size)
-                if not rows:
-                    break
-                yield rows
+            cursor_id = id(cursor)
+            if not hasattr(self, '_cursors'):
+                self._cursors = {}
+            self._cursors[cursor_id] = cursor
+        else:
+            cursor = self._cursors.get(cursor_id)
+            if cursor is None:
+                return [], cursor_id, True
+        
+        # Fetch next chunk
+        rows = cursor.fetchmany(chunk_size)
+        
+        # Check if complete
+        is_complete = len(rows) == 0
+        
+        # Clean up if complete
+        if is_complete:
+            cursor.close()
+            if hasattr(self, '_cursors') and cursor_id in self._cursors:
+                del self._cursors[cursor_id]
+        
+        return rows, cursor_id, is_complete
 
 
 def create_dbapi_actor_pool(
