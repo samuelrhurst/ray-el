@@ -4,7 +4,24 @@ docs_dir: docs-src  # Source markdown files
 site_dir: docs      # Built output for GitHub Pages
 
 nav:
-  - Home: index.md
+  - Introduction: index.md
+  - Getting Started:
+    - Installation: getting_started/installation.md
+    - Starting a Ray Cluster: getting_started/starting_a_ray_cluster.md
+    - Using the Python API: getting_started/using_the_python_api.md
+    - Using Config Files: getting_started/using_config_files.md
+    - Using the CLI: getting_started/using_the_cli.md
+  - Guides:
+    - File to Database: guides/file_to_database.md
+    - Database to File: guides/database_to_file.md
+    - Database to Database: guides/database_to_database.md
+  - Concepts:
+    - Ray Datasets: concepts/ray_datasets.md
+  - Reference:
+    - actors: reference/ray_el/actors.md
+    - datasources: reference/ray_el/datasources.md
+    - read: reference/ray_el/read.md
+    - sqlgen: reference/ray_el/sqlgen.md
 
 theme:
   name: "material"
@@ -16,4 +33,7 @@ plugins:
           paths:
             - src
   - mkdocs-autoapi:
-      autoapi_dir: src/ray_el
+      autoapi_dir: src
+      autoapi_root: reference
+      autoapi_keep_files: true
+      autoapi_add_nav_entry: false
