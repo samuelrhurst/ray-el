@@ -1,11 +1,5 @@
 {
   "github.copilot.chat.commitMessageGeneration.instructions": [
-    { "text": "Use conventional commit format: type(scope): description" },
-    { "text": "Use imperative mood: 'Add feature' not 'Added feature'" },
-    { "text": "Keep subject line under 50 characters" },
-    { "text": "Use types: feat, fix, docs, style, refactor, perf, test, chore, ci" },
-    { "text": "Include scope when relevant (e.g., api, ui, auth)" },
-    { "text": "Do not include a footer" },
     // Chris Beam's rules:
     { "text": "Separate subject from body with a blank line" },
     { "text": "Limit the subject line to 50 characters" },
