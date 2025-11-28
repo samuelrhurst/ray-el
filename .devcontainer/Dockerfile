@@ -9,14 +9,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certifi
 ADD https://astral.sh/uv/0.9.10/install.sh /uv-installer.sh
 RUN UV_INSTALL_DIR=/usr/local/bin sh /uv-installer.sh && rm /uv-installer.sh
 
-# Installing Zensical
-# ===================
-RUN uv tool install mkdocs==1.6.1 --with mkdocs-material==9.7.0 --with mkdocstrings[python]==0.30.1 --with mkdocs-autoapi==0.4.1
+# Note: This docker file runs as root, so to make sure any tools installed with uv are
+# available to non-root users, we install them to /usr/local/share/uv/tools and
+# set the UV_TOOL_BIN_DIR to /usr/local/bin.
 
-# Install Quarto
+# Install MkDocs
 # ==============
-# ARG QUARTO_VERSION=1.9.10
-# ADD https://github.com/quarto-dev/quarto-cli/releases/download/v${QUARTO_VERSION}/quarto-${QUARTO_VERSION}-linux-amd64.deb /quarto-linux-amd64.deb
-# RUN apt-get install -y --no-install-recommends /quarto-linux-amd64.deb && rm /quarto-linux-amd64.deb
+RUN UV_TOOL_DIR=/usr/local/share/uv/tools UV_TOOL_BIN_DIR=/usr/local/bin uv tool install mkdocs==1.6.1 --with mkdocs-material==9.7.0 --with mkdocstrings[python]==0.30.1 --with mkdocs-autoapi==0.4.1
 
-# RUN pip install jupyter ipykernel
+# Install pytest
+# ==============
+# Install not required, it's already in the base image.
+# RUN UV_TOOL_DIR=/usr/local/share/uv/tools UV_TOOL_BIN_DIR=/usr/local/bin uv tool install pytest==9.0.1
