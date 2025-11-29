@@ -1,5 +1,6 @@
 * [ray_el](ray_el/index.md)
     * [actors](ray_el/actors.md)
+    * [bundle](ray_el/bundle.md)
     * [datasources](ray_el/datasources.md)
     * [read](ray_el/read.md)
     * [sqlgen](ray_el/sqlgen.md)
