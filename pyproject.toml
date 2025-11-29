@@ -26,7 +26,7 @@ postgresql = ["adbc-driver-postgresql"]
 redshift = ["redshift_connector"]
 snowflake = ["adbc-driver-snowflake"]
 teradata = ["teradatasql"]
-trino = ["trino-python-client"]
+trino = ["trino"]
 
 [project.scripts]
 ray-el = "ray_el:main"
