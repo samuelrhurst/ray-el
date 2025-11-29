@@ -23,6 +23,7 @@
     { "text": "Commits focused on the licence that the project is released under should be given the chore type." },
     { "text": "Commits that focus on changes to files in the .vscode dir should be give a scope of vscode" },
     { "text": "Commits that focus on changes to files in the .devcontainer dir should be type of chore" },
-    { "text": "Commits that focus on changes to files in the .devcontainer dir should be give a scope of devcontainer" }
+    { "text": "Commits that focus on changes to files in the .devcontainer dir should be give a scope of devcontainer" },
+    { "text": "Commits that focus on changes to files in the tests dir should be given a type of test" }
   ]
 }
