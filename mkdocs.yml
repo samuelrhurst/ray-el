@@ -19,6 +19,7 @@ nav:
     - Ray Datasets: concepts/ray_datasets.md
   - Reference:
     - actors: reference/ray_el/actors.md
+    - bundle: reference/ray_el/bundle.md
     - datasources: reference/ray_el/datasources.md
     - read: reference/ray_el/read.md
     - sqlgen: reference/ray_el/sqlgen.md
