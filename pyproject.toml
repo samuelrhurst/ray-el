@@ -4,13 +4,29 @@ version = "0.1.0"
 description = "A data extract-load tool built on top of the Ray distributed framework"
 readme = "README.md"
 authors = [
-    { name = "Sam Hurst", email = "20537436+samuelrhurst@users.noreply.github.com" }
+    { name = "Sam Hurst", email = "samuelrhurst@users.noreply.github.com" }
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "ipykernel>=7.1.0",
+    "pyarrow==22.0.0",
     "ray[data,default]>=2.52.0",
     "sqlglot>=28.0.0",
 ]
+
+[project.optional-dependencies]
+bigquery = ["adbc-driver-bigquery"]
+databricks = ["databricks-sql-connector"]
+duckdb = ["duckdb"]
+mssql = ["mssql-python"]
+mysql = ["mysql-connector-python"]
+odbc = ["turbodbc"]
+oracle = ["oracledb"]
+postgresql = ["adbc-driver-postgresql"]
+redshift = ["redshift_connector"]
+snowflake = ["adbc-driver-snowflake"]
+teradata = ["teradatasql"]
+trino = ["trino-python-client"]
 
 [project.scripts]
 ray-el = "ray_el:main"
