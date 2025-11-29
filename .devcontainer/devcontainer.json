@@ -9,7 +9,8 @@
 				"ms-python.python",
 				"ms-python.vscode-pylance",
 				"charliermarsh.ruff",
-				"ms-toolsai.jupyter"
+				"ms-toolsai.jupyter",
+				"tamasfe.even-better-toml"
 			]
 		}
 	}
