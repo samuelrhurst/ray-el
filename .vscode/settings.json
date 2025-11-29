@@ -1,4 +1,7 @@
 {
+  "python.testing.pytestEnabled": true,
+  // Commit message generation instructions for GitHub Copilot Chat
+  // ==============================================================
   "github.copilot.chat.commitMessageGeneration.instructions": [
     // Chris Beam's rules:
     { "text": "Separate subject from body with a blank line" },
@@ -19,14 +22,20 @@
     // Custom rules:
     { "text": "Footers MUST NOT be included."},
     { "text": "types other than fix: and feat: are allowed, for example, build:, chore:, ci:, docs:, style:, refactor:, perf:, test:" },
-    // Nudges:
+    // Nudges
+    // ------
     { "text": "Commits focused on the licence that the project is released under should be given the chore type." },
+    // Nudges for .vscode and .devcontainer dirs:
     { "text": "Commits that focus on changes to files in the .vscode dir should be give a type of chore" },
     { "text": "Commits that focus on changes to files in the .vscode dir should be give a scope of vscode" },
+    { "text": "If there is not a staged change to a file in the .vscode dir, do not give a scope of vscode" },
     { "text": "Commits that focus on changes to files in the .devcontainer dir should be type of chore" },
     { "text": "Commits that focus on changes to files in the .devcontainer dir should be give a scope of devcontainer" },
+    // Nudges for tests:
     { "text": "Commits that focus on changes to files in the tests dir should be given a type of test" },
-    { "text": "Commits that focus on changes to files in the docs and/or docs-src dirs should be given a type of docs" },
-    { "text": "Commits that focus on changes to a specific md file in the docs dir (and optionally its corresponding files in docs-src dirs) should use that md file as the scope" }
+    // Nudges for docs:
+    { "text": "Commits that focus on changes to files in the docs and/or docs-src dirs (or the mkdocs.yml file) should be given a type of docs" },
+    { "text": "If there are only staged changes to files in the docs and/or docs-src dirs (or the mkdocs.yml file), give the commit message a type of docs" },
+    { "text": "Commits that focus on changes to a specific md file in the docs dir (and optionally its corresponding files in docs-src dirs) should use the name of that md file as the scope" }
   ]
 }
