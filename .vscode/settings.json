@@ -18,6 +18,9 @@
     { "text": "A commit body is free-form and MAY consist of any number of newline separated paragraphs." },
     // Custom rules:
     { "text": "Footers MUST NOT be included."},
-    { "text": "types other than fix: and feat: are allowed, for example, build:, chore:, ci:, docs:, style:, refactor:, perf:, test:" }
+    { "text": "types other than fix: and feat: are allowed, for example, build:, chore:, ci:, docs:, style:, refactor:, perf:, test:" },
+    // Nyudges:
+    { "text": "Commits focused on the licence that the project is released under should be given the chore type." },
+    { "text": "Commits that focus on changes to files in the .vscode dir should be give a scope of vscode" }
   ]
 }
