@@ -6,7 +6,6 @@ Install ray-el using pip:
 
 ```bash
 pip install ray-el
-2025-11-29 03:26:30.423 [info] arg: --rootdir already exists in args, not adding.
 ```
 
 ## Optional Database Drivers
@@ -20,7 +19,7 @@ pip install ray-el[database_name]
 ### Available Database Drivers
 
 | Option | Package | PyPI | Source |
-|--------|---------|------|--------|
+|--------|---------|------|:------:|
 | `bigquery` | adbc-driver-bigquery | [PyPI](https://pypi.org/project/adbc-driver-bigquery/) | [:fontawesome-brands-github:](https://github.com/apache/arrow-adbc) |
 | `databricks` | databricks-sql-connector | [PyPI](https://pypi.org/project/databricks-sql-connector/) | [:fontawesome-brands-github:](https://github.com/databricks/databricks-sql-python) |
 | `duckdb` | duckdb | [PyPI](https://pypi.org/project/duckdb/) | [:fontawesome-brands-github:](https://github.com/duckdb/duckdb) |
